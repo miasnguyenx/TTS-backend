@@ -1,4 +1,5 @@
 from ast import Constant
+from unicodedata import name
 from flask.wrappers import Response
 import json
 from flask import request
@@ -12,10 +13,12 @@ class Crud():
     def insert_user(self):
         mydb = self.mydb
         try:
-            data = {"name": request.form["name"],
+            data = {"Name": request.form["Name"],
                     "lastName": request.form["lastName"]}
             my_collection = mydb.myNewCollection2
             db_response = my_collection.insert_one(data)
+            for attr in dir(db_response):
+                print(attr)
             print(db_response.inserted_id)
             return Response(
                 response=json.dumps({
@@ -66,11 +69,18 @@ class Crud():
             for user in data:
                 user["_id"] = str(user["_id"])
             print(data)
-            return json.dumps(data)
-        except Exception as ex:
+            return Response(
+                response=json.dumps(data),
+                status=500,
+                mimetype="application/json",
+            )
+        except Exception:
             print("ERROR: get_users failed")
-            msg = "Cannot get user"
-            return msg
+        return Response(
+            response=json.dumps({
+                "message": "error on getting user",
+            })
+        )
 
     def update_user(self, id):
         mydb = self.mydb
@@ -78,7 +88,8 @@ class Crud():
             my_collection = mydb.myNewCollection2
             db_response = my_collection.update_one(
                 {"_id": ObjectId(id)},
-                {"$set": {"name": request.form["name"]}}
+                {"$set": {"Name": request.form["Name"],
+                          "lastName": request.form["lastName"]}}
             )
 
             for attr in dir(db_response):
@@ -103,5 +114,31 @@ class Crud():
             return Response(
                 response=json.dumps({
                     "message": "cannot update users",
+                })
+            )
+
+    def get_user(self, id):
+        mydb = self.mydb
+        try:
+            my_collection = mydb.myNewCollection2
+            db_response = my_collection.find_one({"_id": ObjectId(id)})
+            print(db_response)
+            print(type(db_response))
+            # ***************************
+            db_response["_id"] = str(db_response["_id"])
+            # ***************************
+            for attr in dir(db_response):
+                print(attr)
+            if db_response:
+                return Response(
+                        response=json.dumps(db_response),
+                        status=200,
+                        mimetype="application/json"
+                )
+        except Exception as ex:
+            print(ex)
+            return Response(
+                response=json.dumps({
+                    "message": "user id not exist",
                 })
             )

@@ -1,4 +1,4 @@
-from redis import Redis
+import redis
 
 
 host_name = 'localhost'
@@ -7,7 +7,7 @@ db_num = 0
 
 
 def connect():
-    r = Redis(host=host_name, port=port_number, db=db_num)
+    r = redis.Redis(host=host_name, port=port_number, db=db_num)
     return r
 
 # r.set('foo', 'bar')
