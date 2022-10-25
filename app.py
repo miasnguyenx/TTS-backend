@@ -1,25 +1,27 @@
+from curses.ascii import NUL
+from queue import Empty
+from unittest import result
 from flask import Flask, request, redirect, render_template
 import json
 from flask.wrappers import Response
 import pymongo
-from redis_db import redis_conn
+import rediscached
+import mongodb
+import crud
 from bson.objectid import ObjectId
 
 
 app = Flask(__name__)
 
 try:
-    myclient = pymongo.MongoClient(
-        "mongodb+srv://nghianguyen:DdIkT3fWitktzD0m@clus\
-        ter0.x9w591u.mongodb.net/?retryWrites=true&w=majority")
-    mydb = myclient["sample_airbnb"]
-    print(myclient.server_info())
+    mydb = mongodb.connect()
+    print(mydb)
+    worker = crud.Crud(mydb)
 except ConnectionError:
     print("MONGO CONNECTION ERROR")
 
 try:
-    myredis = redis_conn()
-    myredis.set("a", "b")
+    myredis = rediscached.connect()
 except ConnectionError:
     print("REDIS CONNECTION ERROR")
 
@@ -36,79 +38,29 @@ def app_setup():
 
 @app.route("/create", methods=['POST'])
 def create():
-    try:
-        data = {"name": request.form["name"],
-                "lastName": request.form["lastName"]}
-        my_collection = mydb.myNewCollection2
-        db_response = my_collection.insert_one(data)
-        print(db_response.inserted_id)
-        return Response(
-            response=json.dumps({
-                "message": "user_created",
-                "id": f"{db_response.inserted_id}"
-            }),
-            status=200,
-            mimetype="application/json"
-        )
-    except Exception as ex:
-        print(ex)
+    worker.insert_user()
 
 
 @app.route("/getusers", methods=['GET'])
 def get_users():
-    try:
-        my_collection = mydb.myNewCollection2
-        data = list(my_collection.find())
-        for user in data:
-            user["_id"] = str(user["_id"])
-        print(data)
+    result = worker.get_users()
+    if (result):
         return Response(
-            response=json.dumps(data),
+            response=result,
             status=500,
             mimetype="application/json"
         )
-    except Exception as ex:
-        print(ex)
-    return Response(
-        response=json.dumps({
-            "message": "cannot read users",
-        })
-    )
 
 
 @app.route("/delete/<id>", methods=['DELETE'])
 def delete(id):
-    try:
-        my_collection = mydb.myNewCollection2
-        db_response = my_collection.delete_one({"_id": ObjectId(id)})
-        if db_response.deleted_count == 1:
-
-            return Response(
-                response=json.dumps({
-                    "message": "user deleted",
-                }),
-                status=200,
-                mimetype="application/json"
-            )
-        return Response(
-            response=json.dumps({
-                "message": "user not found",
-            }),
-            status=200,
-            mimetype="application/json"
-        )
-
-    except Exception as ex:
-        print(ex)
-    return Response(
-        response=json.dumps({
-            "message": "delete failed",
-        })
-    )
+    result = worker.delete_user(id)
+    return result
 
 
 @app.route("/update/<id>", methods=['PATCH'])
 def update(id):
+    result =
     try:
         my_collection = mydb.myNewCollection2
         db_response = my_collection.update_one(

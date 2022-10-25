@@ -1,12 +1,12 @@
-from gzip import READ
 from redis import Redis
 
-host_name = '0.0.0.0'
+
+host_name = 'localhost'
 port_number = 6379
 db_num = 0
 
 
-def redis_conn():
+def connect():
     r = Redis(host=host_name, port=port_number, db=db_num)
     return r
 

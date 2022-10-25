@@ -12,7 +12,7 @@ try:
     # print(myclient.server_info())
 except ConnectionError:
     print("MONGO CONNECTION ERROR")
-    
+
 fake = Faker()
 a_name = fake.name()
 
@@ -22,6 +22,17 @@ a_name = fake.name()
 #         "lastName": fake.last_name()
 #     }
 #     db.myNewCollection2.insert_one(a_object)
+
+
+def add_data():
+    for i in range(100):
+        a_object = {
+            "Name": fake.first_name(),
+            "lastName": fake.last_name()
+        }
+        db.myNewCollection2.insert_one(a_object)
+
+
 for i in db.myNewCollection2.find():
     print(i)
 myclient.close()
