@@ -15,9 +15,16 @@ except ConnectionError:
     print("MONGO CONNECTION ERROR")
 
 try:
-    myredis = rediscached.connect()
+    myredis = rediscached.connect('localhost')
+    myredis.set("new", "shiet")
 except ConnectionError:
-    print("REDIS CONNECTION ERROR")
+    print("REDIS CONNECTION ERROR localhost")
+
+try:
+    myredis = rediscached.connect('redis')
+    myredis.set("new", "shiet")
+except ConnectionError:
+    print("REDIS CONNECTION ERROR localhost")
 
 
 @app.route("/")

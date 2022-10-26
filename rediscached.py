@@ -1,12 +1,12 @@
 import redis
 
 
-host_name = 'localhost'
+host_name = 'redis'
 port_number = 6379
 db_num = 0
 
 
-def connect():
+def connect(host_name):
     r = redis.Redis(host=host_name, port=port_number, db=db_num)
     return r
 
