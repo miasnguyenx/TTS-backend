@@ -1,5 +1,6 @@
 from redis.commands.json.path import Path
 from flask import Flask, request, redirect, render_template
+import redis
 import json
 import rediscached
 import mongodb
@@ -15,16 +16,9 @@ except ConnectionError:
     print("MONGO CONNECTION ERROR")
 
 try:
-    myredis = rediscached.connect('localhost')
-    myredis.set("new", "shiet")
+    myredis = rediscached.connect()
 except ConnectionError:
-    print("REDIS CONNECTION ERROR localhost")
-
-try:
-    myredis = rediscached.connect('redis')
-    myredis.set("new", "shiet")
-except ConnectionError:
-    print("REDIS CONNECTION ERROR localhost")
+    print("REDIS CONNECTION ERROR")
 
 
 @app.route("/")

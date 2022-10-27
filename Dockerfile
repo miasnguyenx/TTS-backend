@@ -9,4 +9,4 @@ RUN pip3 install -r requirements.txt --no-cache-dir
 
 COPY . /flask_app/
 
-CMD ["flask", "run"]
+CMD ["flask", "run", "--host", "0.0.0.0"]

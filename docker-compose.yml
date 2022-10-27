@@ -3,7 +3,7 @@ services:
     image: redislabs/redismod
     container_name: redis
     ports:
-      - '6380:6380'
+      - '6379:6379'
   web:
       build: .
       container_name: flask-app
