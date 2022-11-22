@@ -1,16 +1,44 @@
+networks:
+  app-tier:
+    driver: bridge
+
 services:
   redis:
     image: redislabs/redismod
     container_name: redis
     ports:
       - '6379:6379'
-  web:
-      build: .
-      container_name: flask-app
-      ports:
-        - '5000:5000'
-      volumes:
-        - .:/flask-app
-      depends_on:
-        - redis
+    networks:
+      - app-tier
 
+  rabbitmq:
+    image: 'bitnami/rabbitmq:latest'
+    environment:
+    - RABBITMQ_PASSWORD=test
+    - RABBITMQ_USERNAME=test
+    ports:
+      - '15672:15672'
+    networks:
+      - app-tier
+
+  msgqueue:
+    build: ./docker/rabbit
+    container_name: msgqueue
+    volumes:
+      - .:/msgqueue
+    depends_on:
+      - rabbitmq
+    networks:
+      - app-tier
+
+  web:
+    build: ./docker/web
+    container_name: flask-app
+    ports:
+      - '5000:5000'
+    volumes:
+      - .:/flask-app
+    depends_on:
+      - redis
+    networks:
+      - app-tier

@@ -2,11 +2,11 @@
 
 FROM python:3.8-slim-buster
 
-WORKDIR /flask_app
+WORKDIR /rabbit
 
-COPY requirements.txt /flask_app
+COPY requirements.txt /rabbit
 RUN pip3 install -r requirements.txt --no-cache-dir
 
-COPY . /flask_app/
+COPY . /rabbit
 
-CMD ["flask", "run", "--host", "0.0.0.0"]
+CMD ["python3", "prepare_worker.py"]

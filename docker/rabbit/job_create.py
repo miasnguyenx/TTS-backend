@@ -18,9 +18,11 @@ class jobCreate:
         return msg
     
     def message_queue_initiate(self):
-        credentials = pika.PlainCredentials('test', 'test')
+        credentials = pika.PlainCredentials('user', 'bitnami')
         connection = pika.BlockingConnection(
-            pika.ConnectionParameters(host='172.20.0.2',credentials=credentials))
+            pika.ConnectionParameters(host='172.17.0.2',credentials=credentials))
+        # connection = pika.BlockingConnection(
+        #     pika.ConnectionParameters(host='172.17.0.2'))
         channel = connection.channel()
 
         channel.exchange_declare(exchange='video', exchange_type='direct')
@@ -34,7 +36,7 @@ class jobCreate:
         channel = self.message_queue_initiate()
         message = self.job_initiate()
         
-        print("Published, Jobid[%d], duration: %d seconds" %
+        print("Published, Jobid[%d], duration: %f seconds" %
             (message['id'], message['worktime']))
         
         channel.basic_publish(
@@ -46,5 +48,5 @@ class jobCreate:
             )
         )
 
-# publisher = jobCreate()
-# publisher.publish_job()
+publisher = jobCreate()
+publisher.publish_job()

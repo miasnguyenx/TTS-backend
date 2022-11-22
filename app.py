@@ -12,8 +12,12 @@ import json
 import rediscached
 import mongodb
 import crud
-from prometheus_client import Counter
+from prometheus_client import Counter, Gauge, Histogram, Summary
 from prometheus_flask_exporter import PrometheusMetrics
+import requests
+from faker import Faker
+from rabbitmq_server.job_create import jobCreate
+# from rabbitmq_server.prepare_worker import workerHelp
 
 
 app = Flask(__name__)
@@ -21,7 +25,9 @@ metrics = PrometheusMetrics(app)
 app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
     '/metrics': make_wsgi_app()
 })
+
 c = Counter('io_task', 'io_task_counter')
+fake = Faker()
 
 # c = Counter('my_data', 'Description of my data')
 # c.inc(1000)  # Increment by given value
@@ -68,6 +74,11 @@ def random_status():
     return Response("random status", status=status_code)
 
 
+@app.route("/verify", methods=['POST'])
+def verify():
+    result = worker.verify_user()
+    return result
+
 @app.route("/create", methods=['POST'])
 def create():
     result = worker.insert_user()
@@ -86,7 +97,7 @@ def delete(id):
     return result
 
 
-@app.route("/update/<id>", methods=['PUT'])
+@app.route("/update/<id>", methods=['PUT','PATCH'])
 def update(id):
     result = worker.update_user(id)
     return result
@@ -94,7 +105,7 @@ def update(id):
 
 @app.route("/getuser/<id>", methods=['GET'])
 def get_user(id):
-    result = worker.get_user(id)
+    result = worker.get_user_by_id(id)
     user = result.data.decode("utf-8")
     user = json.loads(user)
     # print(user)
@@ -116,6 +127,57 @@ def get_user(id):
 # def export_metrics():
 #     pass
 
+# @app.route('/processjob', methods = ['GET', 'POST'])
+# def job_process():
+#     worker = workerHelp()
+#     worker.process_job()
+#     return "processing job"
+
+@app.route('/createjob', methods = ['GET', 'POST'])
+def job_create():
+    my_job = jobCreate()
+    my_job.publish_job()
+    return "create one job"
+
+@app.route('/debug', methods = ['GET', 'POST'])
+def debug():
+    # user sign up mooi user co 1 id
+    name = fake.first_name()
+    last_name = fake.last_name()
+    r = requests.post(
+        'http://localhost:5000/create', 
+                  data={
+                      "Name": name,
+                      "lastName": last_name,
+                  }
+    )
+    # user sign in
+    if r.status_code == 200: 
+        r = requests.post(
+            'http://localhost:5000/verify',
+            data={
+                "Name": name,
+                "lastName": last_name,
+            }
+            )
+        print(type(r.content))
+        print(r.content)
+        result = r.content.decode("utf-8")
+        result = json.loads(r.content)
+        print(type(result))
+        print(result)
+        user_id = result['id']
+        print(user_id)
+        return Response(
+            response=r.content,
+            status=r.status_code,
+        )
+    else:
+        return Response(
+            response=r.content,
+            status=r.status_code,
+        )
+    
 
 @app.route('/')
 def main():
@@ -130,12 +192,12 @@ def skip():  # default metrics are not collected
     return 'skip route'
 
 
-@app.route('/<item_type>')
-@metrics.do_not_track()
-@metrics.counter('invocation_by_type', 'Number of invocations by type',
-                 labels={'item_type': lambda: request.view_args['type']})
-def by_type(item_type):
-    return item_type  # only the counter is collected, not the default metrics
+# @app.route('/<item_type>')
+# @metrics.do_not_track()
+# @metrics.counter('invocation_by_type', 'Number of invocations by type',
+#                  labels={'item_type': lambda: request.view_args['type']})
+# def by_type(item_type):
+#     return item_type  # only the counter is collected, not the default metrics
 
 
 @app.route('/long-running')

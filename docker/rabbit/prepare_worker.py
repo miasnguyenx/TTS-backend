@@ -6,9 +6,11 @@ import time
 
 class workerHelp:
     def channel_initiate(self):
-        credentials = pika.PlainCredentials('test', 'test')
+        credentials = pika.PlainCredentials('user', 'bitnami')
         connection = pika.BlockingConnection(
-            pika.ConnectionParameters(host='172.20.0.2',credentials=credentials))
+            pika.ConnectionParameters('172.17.0.2', credentials=credentials))
+        # connection = pika.BlockingConnection(
+        #     pika.ConnectionParameters(host='172.17.0.2'))
         channel = connection.channel()
         # declare exchange
         channel.exchange_declare(exchange='video', exchange_type='direct')
@@ -27,7 +29,7 @@ class workerHelp:
     def execute_prepare(self, msg):
         msg = json.loads(msg)
         worktime = msg['worktime']
-        print("Executing jobid[%d]..., estimate: %d seconds" %
+        print("Executing jobid[%d]..., estimate: %f seconds" %
             (msg['id'], msg['worktime']))
         time.sleep(worktime)
         print('Done jobid[%d]' % msg['id'])
@@ -44,8 +46,9 @@ class workerHelp:
         channel.basic_consume(
             queue='prepare', on_message_callback=self.prepare_callback
         )
+        
         print('-------------------')
         channel.start_consuming()
-        
+
 tmp = workerHelp()
 tmp.process_job()
