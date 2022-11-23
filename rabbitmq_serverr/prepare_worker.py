@@ -6,7 +6,7 @@ import time
 
 class workerHelp:
     def channel_initiate(self):
-        credentials = pika.PlainCredentials('test', 'test')
+        credentials = pika.PlainCredentials('user', 'bitnami')
         connection = pika.BlockingConnection(
             pika.ConnectionParameters(host='172.20.0.2',credentials=credentials))
         channel = connection.channel()

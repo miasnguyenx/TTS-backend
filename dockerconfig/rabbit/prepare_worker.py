@@ -2,15 +2,18 @@
 import json
 import pika
 import time
-
+import socket
 
 class workerHelp:
     def channel_initiate(self):
         credentials = pika.PlainCredentials('user', 'bitnami')
-        connection = pika.BlockingConnection(
-            pika.ConnectionParameters('172.17.0.2', credentials=credentials))
+        # credentials = pika.PlainCredentials('test', 'test')
         # connection = pika.BlockingConnection(
-        #     pika.ConnectionParameters(host='172.17.0.2'))
+        #     pika.ConnectionParameters('172.17.0.2', credentials=credentials))
+        # connection = pika.BlockingConnection(
+        #     pika.ConnectionParameters(host='172.22.0.2', credentials=credentials))
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(host='172.20.0.2',credentials=credentials))
         channel = connection.channel()
         # declare exchange
         channel.exchange_declare(exchange='video', exchange_type='direct')
@@ -40,15 +43,20 @@ class workerHelp:
 
     def process_job(self):
         print('-------------------')
-        
-        channel = self.channel_initiate()
-        channel.basic_qos(prefetch_count=1)
-        channel.basic_consume(
-            queue='prepare', on_message_callback=self.prepare_callback
-        )
-        
-        print('-------------------')
-        channel.start_consuming()
+        while (True):
+            try:
+                channel = self.channel_initiate()
+                channel.basic_qos(prefetch_count=1)
+                channel.basic_consume(
+                    queue='prepare', on_message_callback=self.prepare_callback
+                )
+                
+                print('-------------------')
+                channel.start_consuming()
+            except pika.exceptions.AMQPConnectionError:
+                print('oops. lost connection. trying to reconnect.')
+                # avoid rapid reconnection on longer RMQ server outage
+                time.sleep(1) 
 
 tmp = workerHelp()
 tmp.process_job()

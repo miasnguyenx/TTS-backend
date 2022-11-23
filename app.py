@@ -16,7 +16,7 @@ from prometheus_client import Counter, Gauge, Histogram, Summary
 from prometheus_flask_exporter import PrometheusMetrics
 import requests
 from faker import Faker
-from rabbitmq_server.job_create import jobCreate
+from rabbitmq_serverr.job_create import jobCreate
 # from rabbitmq_server.prepare_worker import workerHelp
 
 

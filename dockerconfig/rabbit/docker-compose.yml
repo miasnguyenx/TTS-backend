@@ -1,0 +1,25 @@
+services:
+  rabbitmq:
+    image: 'bitnami/rabbitmq'
+    # environment:
+    # - RABBITMQ_PASSWORD=test
+    # - RABBITMQ_USERNAME=test
+    ports:
+      - '15672:15672'
+    networks:
+      - app-tier
+
+  msgqueue:
+    build: .
+    container_name: msgqueue
+    volumes:
+      - .:/msgqueue
+    depends_on:
+      - rabbitmq
+    networks:
+      - app-tier
+    # command: ["./wait-for-it.sh", "rabbitmq", "--", "python", "app.py"]
+networks:
+  app-tier:
+    driver: bridge
+ 
